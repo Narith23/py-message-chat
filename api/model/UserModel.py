@@ -3,7 +3,7 @@ from pydantic import BaseModel, Field
 
 
 class User(BaseModel):
-    id: Optional[str]
+    id: Optional[str] = Field(default=None, alias="_id", primary_key=True, unique=True)
     name: str = Field(...)
     email: Union[str, None] = Field(...)
     phone: Union[str, None] = Field(...)

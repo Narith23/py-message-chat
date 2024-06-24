@@ -4,9 +4,8 @@ from pydantic import BaseModel, Field
 
 
 class ChatSchema(BaseModel):
-    is_group: Optional[bool] = False
     name: Optional[str] = None
-    created_at: Optional[datetime] = datetime.now()
+    is_group: Optional[bool] = False
     
     class Config:
         schema_extra = {
@@ -16,5 +15,3 @@ class ChatSchema(BaseModel):
                 "created_at": "2022-02-02T12:00:00Z"
             }
         }
-    
-    
