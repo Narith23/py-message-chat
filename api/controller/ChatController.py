@@ -5,8 +5,9 @@ from bson import ObjectId
 from fastapi.responses import JSONResponse
 from api.controller.UserController import UserController
 from api.model.ChatModel import Chat
+from api.model.MessageModel import MessageModel
 from api.model.ParticipantModel import Participant
-from api.schema.ParticipantSchema import RequestAddParticipant
+from api.schema.ParticipantSchema import RequestAddMessage, RequestAddParticipant
 from api.schema.UserSchema import UserToken
 from helper.database import (
     chat_collection,
@@ -280,17 +281,19 @@ class ChatController:
                     "user_id": {"$ne": str(ObjectId(user.get("id")))},
                 }
             )
-            
+
             # If no participants found, return a 404 error
             if get_participants is None:
-                return JSONResponse(status_code=404, content={"message": "Participants not found"})
-            
+                return JSONResponse(
+                    status_code=404, content={"message": "Participants not found"}
+                )
+
             # Get user
             get_user = await user_collection.find_one(
-                {"_id": str(ObjectId(get_participants['user_id']))}
+                {"_id": str(ObjectId(get_participants["user_id"]))}
             )
             # return JSONResponse(status_code=200, content=get_user['name'])
-            
+
             get_message = await message_collection.find(
                 {"chat_id": str(ObjectId(chat_id))}
             ).to_list(100)
@@ -328,7 +331,7 @@ class ChatController:
                         """
                     else:
                         contact_name = await user_collection.find_one(
-                            {"_id": str(ObjectId(item['user_id']))}
+                            {"_id": str(ObjectId(item["user_id"]))}
                         )
                         html_message += f"""
                         <li>
@@ -358,7 +361,7 @@ class ChatController:
                             </div>
                         </li>
                         """
-            
+
             html_contacts = f"""
             <div class="card h-100" style="overflow: hidden">
                 <div class="p-3 px-lg-4 border-bottom">
@@ -429,7 +432,7 @@ class ChatController:
                         </div>
                         <div class="col-auto">
                             <button type="submit" class="btn btn-primary chat-send w-md waves-effect waves-light"
-                                id="edit-event-btn" onclick="editEvent({{ $chats->id }})">
+                                id="edit-event-btn" onclick="editEvent('{get_participants['chat_id']}')">
                                 <span class="d-none d-sm-inline-block me-2">Send</span>
                                 <i class="mdi mdi-send float-end"></i>
                             </button>
@@ -439,7 +442,29 @@ class ChatController:
             </div>
             """
             # Return the user_id from the found participants document
-            return JSONResponse(status_code=200, content={"html_contacts": html_contacts})
+            return JSONResponse(
+                status_code=200, content={"html_contacts": html_contacts}
+            )
         except Exception as e:
             logging.exception(e)
-            return JSONResponse(status_code=500, content={"message": "Internal server error"})        
+            return JSONResponse(
+                status_code=500, content={"message": "Internal server error"}
+            )
+
+    @staticmethod
+    async def add_message(
+        chat_id: Union[str, ObjectId], request: RequestAddMessage, user: UserToken
+    ):
+        get_chat = await chat_collection.find_one({"_id": str(ObjectId(chat_id))})
+        if get_chat is None:
+            return JSONResponse(status_code=404, content={"message": "Chat not found"})
+        message = MessageModel(
+            chat_id=str(ObjectId(chat_id)),
+            user_id=str(ObjectId(user.get("id"))),
+            content=request.content,
+        )
+        message.id = str(ObjectId())
+        await message_collection.insert_one(message.dict(by_alias=True))
+        return JSONResponse(
+            status_code=200, content={"message": "Message added successfully"}
+        )

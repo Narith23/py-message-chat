@@ -8,8 +8,8 @@ from helper.database import user_collection
 from api.schema.UserSchema import UserLogin, UserShema, UserToken
 from helper.hash_pass import hash_password, verify_password
 
-JWT_ACCESS_TOKEN_EXPIRE_MINUTES = 30
-JWT_REFRESH_TOKEN_EXPIRE_MINUTES = 60
+JWT_ACCESS_TOKEN_EXPIRE_MINUTES = 770
+JWT_REFRESH_TOKEN_EXPIRE_MINUTES = 1440
 JWT_SECRET_KEY = "-gZNIH52GyRUXi9hThhTw8Kvbi6UMlgz8UjKHJIL3faJqqAXreq_I0WAdfSqjnxk"
 JWT_ALGORITHM = "HS256"
 
@@ -103,7 +103,7 @@ class UserController:
     @staticmethod
     async def get_users(user: UserToken):
         not_query = {
-            "id": {"$not": {"$eq": user.get("id")}},
+            "id": {"$ne": ObjectId(user.get("id"))},
         }
         users = await user_collection.find(not_query).to_list(100)
         return [user_helper(user) for user in users]

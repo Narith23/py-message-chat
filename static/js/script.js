@@ -10,8 +10,21 @@ $(document).ready(function () {
         });
     }
 });
+
+// Websocket
+// let user_id = prompt("Enter your user ID:");
+// let ws = new WebSocket(`ws://localhost:8000/ws/chat/${user_id}`);
+
+// ws.onmessage = function(event) {
+//     console.log(event);
+//     // let messages = document.getElementById('messages');
+//     // let message = document.createElement('div');
+//     // message.textContent = event.data;
+//     // messages.appendChild(message);
+// };
+
 function register() {
-    let usename = document.getElementById("username").value;
+    let username = document.getElementById("username").value;
     let email = document.getElementById("email").value;
     let password = document.getElementById("userpassword").value;
 
@@ -19,7 +32,7 @@ function register() {
         type: "POST",
         url: "http://127.0.0.1:8000/user/register",
         data: {
-            username: usename,
+            username: username,
             email: email,
             password: password
         },
@@ -89,17 +102,48 @@ function addContact(id) {
 }
 
 function openChat(id) {
+    let token = localStorage.getItem("access_token");
+    if (!token) {
+        console.error("No access token found");
+        return;
+    }
+
+    let ws = new WebSocket(`ws://localhost:8000/ws/chat/${id}?token=${token}`);
+    ws.onmessage = function(event) {
+        console.log(event);
+    };
+    ws.onerror = function(event) {
+        console.error("WebSocket error observed:", event);
+    };
     $.ajax({
         url: "/api/v1/chats/" + id,
         type: "GET",
-        data: '',
         success: function(response) {
-            // Display the chat
             $("#chat-content").html(response.html_contacts);
         },
         error: function(error) {
             $("#toast-body").html(error.responseJSON.message);
             $("#liveToast").toast("show");
+        }
+    });
+}
+
+
+
+function editEvent(id) {
+    let content = document.getElementById("chat-input").value;
+
+    $.ajax({
+        type: "PUT",
+        url: `/api/v1/chats/${id}/messages`,
+        headers: {
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+        },
+        data: JSON.stringify({content: content}),
+        dataType: "json",
+        success: function (response) {
+            console.log(response);
         }
     });
 }

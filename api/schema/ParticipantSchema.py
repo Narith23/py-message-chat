@@ -24,3 +24,14 @@ class RequestAddParticipant(BaseModel):
                 "user_id": "some-id"
             }
         }
+        
+        
+class RequestAddMessage(BaseModel):
+    content: Union[str, Any]
+
+    class Config:
+        schema_extra = {
+            "example": {
+                "content": "some-content"
+            }
+        }

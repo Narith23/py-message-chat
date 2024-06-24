@@ -8,8 +8,8 @@ class MessageModel(BaseModel):
     chat_id: Optional[str] = Field(..., forign_key="Chat.id")
     user_id: Optional[str] = Field(..., forign_key="User.id")
     content: Optional[str] = Field(...)
-    created_at: Optional[datetime] = Field(..., default=datetime.now())
-    updated_at: Optional[datetime] = Field(..., default=None)
+    created_at: Optional[datetime] = Field(default=datetime.now())
+    updated_at: Optional[datetime] = Field(default=None)
     
     class Config:
         schema_extra = {
