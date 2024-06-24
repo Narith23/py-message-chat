@@ -4,6 +4,7 @@ from fastapi.templating import Jinja2Templates
 
 from api.controller.ChatController import ChatController
 from api.controller.UserController import UserController
+from api.schema.ParticipantSchema import RequestAddParticipant
 from api.schema.UserSchema import UserShema, UserToken
 from router.verify_token import get_current_user
 
@@ -20,9 +21,13 @@ templates = Jinja2Templates(directory="templates")
 async def get_chat(user: UserToken = Depends(get_current_user)):
     return await ChatController.get_chats(user)
 
-@router.post("/add/contact", status_code=status.HTTP_200_OK, tags=["chat".upper()])
-async def add_contact(contact: str, user: UserToken = Depends(get_current_user)):
-    return await ChatController.add_contact(contact, user)
+@router.post("/chats", status_code=status.HTTP_200_OK, tags=["chat".upper()])
+async def add_chat(request: RequestAddParticipant, user: UserToken = Depends(get_current_user)):
+    return await ChatController.add_chat(request, user)
+
+@router.get("/chats/{chat_id}", status_code=status.HTTP_200_OK, tags=["chat".upper()])
+async def get_chat(chat_id, user: UserToken = Depends(get_current_user)):
+    return await ChatController.get_chat(chat_id, user)
 
 # Home Router
 @router.get("", status_code=status.HTTP_200_OK, tags=["home".upper()])

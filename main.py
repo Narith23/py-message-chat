@@ -20,7 +20,7 @@ async def read_root(request: Request):
     return templates.TemplateResponse("home/index.html", {"request": request, "title": "Home"})
 
 @app.exception_handler(HTTPException)
-async def http_exception_handler(request, exc):
+async def http_exception_handler(request: Request, exc):
     if exc.status_code == 401:
         return templates.TemplateResponse("auth/login.html", {"request": request, "title": "Login"})
     return exc

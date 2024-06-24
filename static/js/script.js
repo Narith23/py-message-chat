@@ -67,16 +67,39 @@ function getChats() {
 }
 
 function addContact(id) {
-    console.log(id);
     $.ajax({
-        url: "",
+        url: "/api/v1/chats",
         type: "POST",
-        data: {
-            contact_id: id
+        headers: {
+            "Content-Type": "application/json",
+            "Accept": "application/json",
         },
+        data: JSON.stringify({
+            user_id: String(id)
+        }),
         success: function(response) {
-            console.log(response);
-            // $('#contact-list').html(response);
+            // Close the modal
+            $("#addContactModal").modal("hide");
+        },
+        error: function(error) {
+            $("#toast-body").html(error.responseJSON.message);
+            $("#liveToast").toast("show");
+        }
+    });
+}
+
+function openChat(id) {
+    $.ajax({
+        url: "/api/v1/chats/" + id,
+        type: "GET",
+        data: '',
+        success: function(response) {
+            // Display the chat
+            $("#chat-content").html(response.html_contacts);
+        },
+        error: function(error) {
+            $("#toast-body").html(error.responseJSON.message);
+            $("#liveToast").toast("show");
         }
     });
 }
