@@ -25,6 +25,7 @@ router = APIRouter(
     prefix="/api/v1",
 )
 
+
 # Initialize Jinja2 templates
 templates = Jinja2Templates(directory="templates")
 
