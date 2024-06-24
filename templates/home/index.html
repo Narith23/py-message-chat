@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <!-- Bootstrap Css -->
+    <link
+      id="bootstrap-style"
+      rel="stylesheet"
+      type="text/css"
+      href="/static/css/bootstrap.css"
+    />
+    <!-- Icons Css -->
+    <link
+      id="icons-style"
+      rel="stylesheet"
+      type="text/css"
+      href="/static/css/icons.css"
+    />
+    <!-- App Css-->
+    <link
+      id="app-style"
+      rel="stylesheet"
+      type="text/css"
+      href="/static/css/app.css"
+    />
+  </head>
+  <body class="authentication-bg" style="overflow: hidden">
+    <div
+      class="d-lg-flex mb-4"
+      id="content"
+      style="height: 100vh; overflow: hidden"
+    >
+      <!-- JAVASCRIPT Loading... 
+        <div class="d-flex justify-content-center">
+            <div class="spinner-border" role="status">
+            <span class="sr-only">Loading...</span>
+
+            
+            </div>
+        </div> -->
+    </div>
+    <div
+      class="modal fade"
+      id="addContactModal"
+      data-bs-backdrop="static"
+      data-bs-keyboard="false"
+      tabindex="-1"
+      role="dialog"
+      aria-labelledby="addContactModalLabel"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="addContactModalLabel">Contact</h5>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            ></button>
+          </div>
+          <div class="modal-body">
+            <div class="row">
+              <div class="col-8">
+                <input
+                  type="text"
+                  name="keyword"
+                  id="search-contact"
+                  class="form-control"
+                  placeholder="Search contact..."
+                />
+              </div>
+              <div class="col-4">
+                <button
+                  type="button"
+                  class="btn btn-primary"
+                >
+                  Search
+                </button>
+              </div>
+            </div>
+            <hr />
+            <div id="contact-list">
+              <div class="pb-3 h-100 overflow-auto">
+                <div
+                  class="chat-message-list"
+                  data-simplebar
+                  style="height: 100vh !important"
+                >
+                  <div class="p-0 border-top">
+                    <div>
+                      <ul class="list-unstyled chat-list" id="list_contact">
+                        
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- JAVASCRIPT -->
+    <script src="/static/libs/jquery/jquery.min.js"></script>
+    <script src="/static/libs/bootstrap/bootstrap.min.js"></script>
+    <script src="/static/libs/metismenu/metismenu.min.js"></script>
+    <script src="/static/libs/simplebar/simplebar.min.js"></script>
+    <script src="/static/libs/node-waves/node-waves.min.js"></script>
+    <script src="/static/libs/waypoints/waypoints.min.js"></script>
+    <script src="/static/libs/jquery-counterup/jquery-counterup.min.js"></script>
+
+    <!-- App js -->
+    <script src="/static/js/app.min.js"></script>
+    <!-- Script js -->
+    <script src="/static/js/script.js"></script>
+
+    <script>
+      $(document).ready(function () {
+        getChats();
+      });
+    </script>
+  </body>
+</html>
