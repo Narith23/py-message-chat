@@ -90,38 +90,49 @@ function addContact(id) {
         data: JSON.stringify({
             user_id: String(id)
         }),
-        success: function(response) {
+        success: function (response) {
             // Close the modal
             $("#addContactModal").modal("hide");
         },
-        error: function(error) {
+        error: function (error) {
             $("#toast-body").html(error.responseJSON.message);
             $("#liveToast").toast("show");
         }
     });
 }
 
-function openChat(id) {
-    let token = localStorage.getItem("access_token");
-    if (!token) {
-        console.error("No access token found");
-        return;
-    }
+var ws;
 
-    let ws = new WebSocket(`ws://localhost:8000/ws/chat/${id}?token=${token}`);
-    ws.onmessage = function(event) {
-        console.log(event);
+function openChat(chat_id, contact_id, user_id) {
+    ws = new WebSocket(`ws://localhost:8000/api/v1/ws/chat/${chat_id}`);
+    ws.onmessage = function (event) {
+        // Display the message in the UI
+        $.ajax({
+            url: "/api/v1/chats/" + chat_id,
+            type: "GET",
+            success: function (response) {
+                $("#chat-content").html(response.html_contacts);
+                $("#chat-content").scrollTop($("#latest")[0].scrollHeight);
+            },
+            error: function (error) {
+                $("#toast-body").html(error.responseJSON.message);
+                $("#liveToast").toast("show");
+            }
+        });
     };
-    ws.onerror = function(event) {
+    ws.onerror = function (event) {
         console.error("WebSocket error observed:", event);
+
+        // Display the error in the UI
+
     };
     $.ajax({
-        url: "/api/v1/chats/" + id,
+        url: "/api/v1/chats/" + chat_id,
         type: "GET",
-        success: function(response) {
+        success: function (response) {
             $("#chat-content").html(response.html_contacts);
         },
-        error: function(error) {
+        error: function (error) {
             $("#toast-body").html(error.responseJSON.message);
             $("#liveToast").toast("show");
         }
@@ -130,7 +141,7 @@ function openChat(id) {
 
 
 
-function editEvent(id) {
+function editEvent(id, sender_id) {
     let content = document.getElementById("chat-input").value;
 
     $.ajax({
@@ -140,10 +151,11 @@ function editEvent(id) {
             "Content-Type": "application/json",
             "Accept": "application/json",
         },
-        data: JSON.stringify({content: content}),
+        data: JSON.stringify({ content: content }),
         dataType: "json",
         success: function (response) {
-            console.log(response);
+            ws.send(JSON.stringify({ type: "personal", content: content, sender_id: sender_id }));
+            // console.log(response);
         }
     });
 }

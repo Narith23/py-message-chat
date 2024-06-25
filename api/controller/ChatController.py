@@ -53,7 +53,7 @@ class ChatController:
                 )
                 html_contacts += f"""
                     <li>
-                        <a onclick="openChat('{contact['chat_id']}')" style="cursor: pointer" id="contact-{contact['chat_id']}" class="list-contact">
+                        <a onclick="openChat('{contact['chat_id']}', '{contact['user_id']}', '{user.get('id')}')" style="cursor: pointer" id="contact-{contact['chat_id']}" class="list-contact">
                             <div class="d-flex align-items-start">
                                 <div class="flex-shrink-0 me-3 align-self-center">
                                     <div class="user-img online">
@@ -299,10 +299,10 @@ class ChatController:
             ).to_list(100)
             html_message = ""
             if get_message is not None or len(get_message) > 0:
-                for item in get_message:
+                for i, item in enumerate(get_message):
                     if item["user_id"] == user.get("id"):
                         html_message += f"""
-                        <li class="right">
+                        <li class="right" {'id="latest"' if i + 1 == len(get_message) else ''}>
                             <div class="conversation-list">
                                 <div class="ctext-wrap">
                                     <div class="ctext-wrap-content">
@@ -334,7 +334,7 @@ class ChatController:
                             {"_id": str(ObjectId(item["user_id"]))}
                         )
                         html_message += f"""
-                        <li>
+                        <li {'id="latest"' if i + 1 == len(get_message) else ''}>
                             <div class="conversation-list">
                                 <div class="ctext-wrap">
                                     <div class="ctext-wrap-content">
@@ -415,7 +415,7 @@ class ChatController:
 
                 <div>
                     <div class="chat-conversation py-3">
-                        <ul class="list-unstyled mb-0 chat-conversation-message px-3" data-simplebar
+                        <ul class="list-unstyled mb-0 chat-conversation-message px-3" id="chat-conversation" data-simplebar
                             style="height: calc(135vh - 417px)">
                             {html_message}
                         </ul>
@@ -432,7 +432,7 @@ class ChatController:
                         </div>
                         <div class="col-auto">
                             <button type="submit" class="btn btn-primary chat-send w-md waves-effect waves-light"
-                                id="edit-event-btn" onclick="editEvent('{get_participants['chat_id']}')">
+                                id="edit-event-btn" onclick="editEvent('{get_participants['chat_id']}', '{user.get('id')}')">
                                 <span class="d-none d-sm-inline-block me-2">Send</span>
                                 <i class="mdi mdi-send float-end"></i>
                             </button>
@@ -466,5 +466,9 @@ class ChatController:
         message.id = str(ObjectId())
         await message_collection.insert_one(message.dict(by_alias=True))
         return JSONResponse(
-            status_code=200, content={"message": "Message added successfully"}
+            status_code=200,
+            content={
+                "message": "Message added successfully",
+                "data": {"user_id": user.get("id"), "content": request.content},
+            },
         )

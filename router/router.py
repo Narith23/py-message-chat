@@ -1,3 +1,4 @@
+import json
 from typing import Annotated, Any, List, Union
 from fastapi import (
     APIRouter,
@@ -11,14 +12,54 @@ from fastapi import (
     WebSocketException,
     status,
 )
+from fastapi.responses import HTMLResponse
 from fastapi.security import OAuth2PasswordRequestForm
 from fastapi.templating import Jinja2Templates
+from fastapi.websockets import WebSocketState
 
 from api.controller.ChatController import ChatController
 from api.controller.UserController import UserController
 from api.schema.ParticipantSchema import RequestAddMessage, RequestAddParticipant
 from api.schema.UserSchema import UserShema, UserToken
 from router.verify_token import get_current_user
+
+
+html = """
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Chat</title>
+    </head>
+    <body>
+        <h1>WebSocket Chat</h1>
+        <h2>Your ID: <span id="ws-id"></span></h2>
+        <form action="" onsubmit="sendMessage(event)">
+            <input type="text" id="messageText" autocomplete="off"/>
+            <button>Send</button>
+        </form>
+        <ul id='messages'>
+        </ul>
+        <script>
+            var client_id = Date.now()
+            document.querySelector("#ws-id").textContent = client_id;
+            var ws = new WebSocket(`ws://localhost:8000/api/v1/ws/${client_id}`);
+            ws.onmessage = function(event) {
+                var messages = document.getElementById('messages')
+                var message = document.createElement('li')
+                var content = document.createTextNode(event.data)
+                message.appendChild(content)
+                messages.appendChild(message)
+            };
+            function sendMessage(event) {
+                var input = document.getElementById("messageText")
+                ws.send(input.value)
+                input.value = ''
+                event.preventDefault()
+            }
+        </script>
+    </body>
+</html>
+"""
 
 
 router = APIRouter(
@@ -33,7 +74,7 @@ templates = Jinja2Templates(directory="templates")
 # Connection manager for WebSocket connections
 class ConnectionManager:
     def __init__(self):
-        self.active_connections: List[WebSocket] = []
+        self.active_connections: list[WebSocket] = []
 
     async def connect(self, websocket: WebSocket):
         await websocket.accept()
@@ -123,24 +164,35 @@ async def get_users(user: UserToken = Depends(get_current_user)):
     return await UserController.get_users(user)
 
 
+@router.get("/test", status_code=status.HTTP_200_OK, tags=["test".upper()])
+async def get():
+    return HTMLResponse(html)
+
+
+# Chat Websocket
 @router.websocket("/ws/chat/{chat_id}")
-async def websocket_endpoint(
-    websocket: WebSocket, chat_id: str, token: str = Query(None)
-):
-    if not token:
-        await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
-        return
-    try:
-        user = get_current_user(token)
-    except HTTPException:
-        await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
-        return
-    print(user, "user")
+async def websocket_endpoint(websocket: WebSocket, chat_id: str):
     await manager.connect(websocket)
     try:
         while True:
             data = await websocket.receive_text()
-            await manager.broadcast(f"User {user.get('id')} in chat {chat_id}: {data}")
+            data = json.loads(data)
+            # check response to send personal message or broadcast
+            await manager.send_personal_message(f"You wrote: {data.get('content')}", websocket)
+            await manager.broadcast(f"Client says: {data.get('content')}")
     except WebSocketDisconnect:
         manager.disconnect(websocket)
-        await manager.broadcast(f"User {user.get('id')} left the chat")
+        await manager.broadcast(f"Client #{chat_id} left the chat")
+
+
+@router.websocket("/ws/{client_id}")
+async def websocket_endpoint(websocket: WebSocket, client_id: int):
+    await manager.connect(websocket)
+    try:
+        while True:
+            data = await websocket.receive_text()
+            await manager.send_personal_message(f"You wrote: {data}", websocket)
+            await manager.broadcast(f"Client #{client_id} says: {data}")
+    except WebSocketDisconnect:
+        manager.disconnect(websocket)
+        await manager.broadcast(f"Client #{client_id} left the chat")
